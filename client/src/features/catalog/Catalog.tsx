@@ -1,20 +1,14 @@
-import { useEffect, useState } from "react";
-import { Product } from "../../app/models/product";
+import { useFetchProductsQuery } from "./catalogApi";
 import ProductList from "./ProductList";
 
-
 const Catalog = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { data, isLoading } = useFetchProductsQuery();
 
-  useEffect(() => {
-    fetch("https://localhost:5001/api/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data));
-  }, []);
+  if (isLoading || !data) return <p>Loading...</p>;
 
   return (
     <>
-      <ProductList products={products} />
+      <ProductList products={data} />
     </>
   );
 };
