@@ -1,12 +1,44 @@
 import { useParams } from "react-router-dom";
 import { Button, Divider, Grid2, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from "@mui/material";
 import { useFetchProductDetailsQuery } from "./catalogApi";
+import { currencyFormat } from "../../lib/util";
+import { useAddBasketItemMutation, useFetchBasketQuery, useRemoveBasketItemMutation } from "../basket/basketApi";
+import { ChangeEvent, useEffect, useState } from "react";
 
 const ProductDetails = () => {
   const {id} = useParams();
+  const [removeBasketItem] = useRemoveBasketItemMutation();
+  const [addBasketItem] = useAddBasketItemMutation();
+  const {data: basket} = useFetchBasketQuery();
+  const item = basket?.items.find(x => x.productId === Number(id));
+  const [quantity, setQuantity] = useState(0);
+
+  useEffect(() => {
+    if (item) setQuantity(item.quantity);
+  }, [item]);
+
   const { data: product, isLoading } = useFetchProductDetailsQuery(Number(id));
 
   if (isLoading || !product) return <div>Loading...</div>;
+
+  const handleUpdateBasket = () => {
+    const updatedQuantity = item
+      ? Math.abs(quantity - item.quantity)
+      : quantity;
+
+    if (!item || quantity > item.quantity) {
+      addBasketItem({product, quantity: updatedQuantity});
+    } else {
+      removeBasketItem({productId: product.id, quantity: updatedQuantity});
+    }
+  }
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = +event.currentTarget.value;
+    if(value < 0) return;
+
+    setQuantity(value);
+  };
 
   const productDetails = [
     {label: 'Name', value: product.name},
@@ -35,7 +67,7 @@ return (
         <Typography variant='h3'>{product.name}</Typography>
         <Divider sx={{mb: 2}} />
         <Typography variant='h4' color="secondary">
-          ${(product.price / 100).toFixed(2)}
+          {currencyFormat(product.price)}
         </Typography>
         <TableContainer>
           <Table sx={{
@@ -54,24 +86,27 @@ return (
 
         <Grid2 container spacing={2} marginTop={3}>
           <Grid2 size={6}>
-            <TextField 
+          <TextField
               variant="outlined"
               type="number"
-              label="Quantity in basket"
+              label='Quantity in basket'
               fullWidth
-              defaultValue={1}
+              value={quantity}
+              onChange={handleInputChange}
             />
           </Grid2>
 
           <Grid2 size={6}>
             <Button
-            sx={{height: 55}}
+              onClick={handleUpdateBasket}
+              disabled={(!item && quantity === 0) || quantity === item?.quantity}
+              sx={{height: 55}}
               color="primary"
               size='large'
               variant="contained"
               fullWidth
             >
-              Add to Basket
+              {item ? 'Update quantity' : 'Add to Basket'}
             </Button>
           </Grid2>
         </Grid2>
