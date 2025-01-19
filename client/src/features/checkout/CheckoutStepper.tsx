@@ -9,12 +9,13 @@ import { currencyFormat } from "../../lib/util";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LoadingButton } from "@mui/lab";
+import { useCreateOrderMutation } from "../orders/orderApi";
 
 const steps = ['Address', 'Payment', 'Review'];
 
 const CheckoutStepper = () => {
   const [activeStep, setActiveStep] = useState(0); 
+  const [createOrder] = useCreateOrderMutation();
   const {data: {name, ...restAddress} = {} as Address, isLoading} = useFetchAddressQuery();
   const {basket, clearBasket} = useBasket();
   const[updateAddress] = useUpdateUserAddressMutation();
@@ -61,6 +62,9 @@ const CheckoutStepper = () => {
       if(!confirmationToken || !basket?.clientSecret) 
         throw new Error('Unable to process payment');
 
+      const orderModel = await createOrderModel();
+      const orderResult = await createOrder(orderModel);
+
       const paymentResult = await stripe?.confirmPayment({
         clientSecret: basket.clientSecret,
         redirect: 'if_required',
@@ -70,7 +74,7 @@ const CheckoutStepper = () => {
       });
 
       if (paymentResult?.paymentIntent?.status === 'succeeded') {
-        navigate('/checkout/success');
+        navigate('/checkout/success', {state: orderResult});
         clearBasket();
       }
       else if (paymentResult?.error) {
@@ -85,6 +89,14 @@ const CheckoutStepper = () => {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  const createOrderModel = async () => {
+    const shippingAddress = await getStripeAddress();
+    const paymentSummary = confirmationToken?.payment_method_preview.card;
+    if (!shippingAddress || !paymentSummary) throw new Error('Problem creating payment');
+
+    return {shippingAddress, paymentSummary};
   }
 
   const getStripeAddress = async () => {
@@ -164,7 +176,7 @@ const CheckoutStepper = () => {
 
       <Box display='flex' paddingTop={2} justifyContent='space-between'>
         <Button onClick={handleBack} disabled={activeStep === 0}>Back</Button>
-        <LoadingButton 
+        <Button 
           onClick={handleNext} 
           disabled={
             (activeStep === 0 && !addressComplete)
@@ -176,7 +188,7 @@ const CheckoutStepper = () => {
           {activeStep === steps.length - 1
             ? `Pay ${currencyFormat(total)}`
             : 'Next'} 
-        </LoadingButton>
+        </Button>
       </Box>
     </Paper>
   )

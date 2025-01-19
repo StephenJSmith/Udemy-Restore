@@ -3,6 +3,7 @@ import { useLogoutMutation } from "../../features/account/accountApi";
 import { User } from "../models/user";
 import { Button, Divider, Fade,  ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { History, Logout, Person } from "@mui/icons-material";
+import { Link } from "react-router-dom";
 
 type Props = {
   user: User;
@@ -45,7 +46,7 @@ const UserMenu = ({user}: Props) => {
                   </ListItemIcon>
                   <ListItemText>My profile</ListItemText>
               </MenuItem>
-              <MenuItem>
+              <MenuItem component={Link} to="/orders">
                   <ListItemIcon>
                       <History />
                   </ListItemIcon>
