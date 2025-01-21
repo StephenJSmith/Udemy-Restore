@@ -1,4 +1,3 @@
-
 using API.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +6,7 @@ namespace API.Data;
 
 public class DbInitializer
 {
-  public static void InitDb(WebApplication app)
+  public static async Task InitDb(WebApplication app)
   {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<StoreContext>()
@@ -15,10 +14,10 @@ public class DbInitializer
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>()
         ?? throw new InvalidOperationException("UserManager not found");
 
-    SeedData(context, userManager);
+    await SeedData(context, userManager);
   }
 
-  private static async void SeedData(StoreContext context, UserManager<User> userManager)
+  private static async Task SeedData(StoreContext context, UserManager<User> userManager)
   {
     context.Database.Migrate();
     if (!userManager.Users.Any())

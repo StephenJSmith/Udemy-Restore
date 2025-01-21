@@ -15,7 +15,9 @@ const sleep = () => new Promise((resolve) => setTimeout(resolve, 1000));
 export const baseQueryWithErrorHandling = async (
   args: string | FetchArgs, api: BaseQueryApi, extraOptions: object) => {
     api.dispatch(startLoading());
-    await sleep();
+
+    if (import.meta.env.DEV) await sleep();
+    
     const result = await customBaseQuery(args, api, extraOptions);
     api.dispatch(stopLoading());
 
@@ -32,7 +34,7 @@ export const baseQueryWithErrorHandling = async (
         case 400:
           if (typeof responseData === 'string') toast.error(responseData);
           else if ('errors' in responseData) {
-              throw Object.values(responseData.errors).flat().join(', ')
+              throw Object.values(responseData.errors!).flat().join(', ')
           }
           else if ('title' in responseData) toast.error(responseData.title);
           break;
