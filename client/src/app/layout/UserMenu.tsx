@@ -2,7 +2,7 @@ import { useState, MouseEvent } from "react";
 import { useLogoutMutation } from "../../features/account/accountApi";
 import { User } from "../models/user";
 import { Button, Divider, Fade,  ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { History, Logout, Person } from "@mui/icons-material";
+import { History, Inventory, Logout, Person } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
 type Props = {
@@ -52,6 +52,13 @@ const UserMenu = ({user}: Props) => {
                   </ListItemIcon>
                   <ListItemText>My orders</ListItemText>
               </MenuItem>
+              {user.roles.includes('Admin') && 
+              <MenuItem component={Link} to="/inventory">
+                  <ListItemIcon>
+                    <Inventory />
+                  </ListItemIcon>
+                  <ListItemText>Inventory</ListItemText>
+              </MenuItem>}
               <Divider />
               <MenuItem onClick={logout}>
                   <ListItemIcon>
