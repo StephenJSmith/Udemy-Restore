@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { LockOutlined } from "@mui/icons-material";
 import { Container, Paper, Box, Typography, TextField, Button } from "@mui/material";
 import { Link } from "react-router-dom";
+import { handleApiError } from "../../lib/util";
 
 const RegisterForm = () => {
   const [registerUser] = useRegisterMutation();
@@ -17,18 +18,19 @@ const RegisterForm = () => {
     try {
       await registerUser(data).unwrap();
     } catch (error) {
-      const apiError = error as {message: string};
-      if (apiError.message && typeof apiError.message === 'string') {
-        const errorArray = apiError.message.split(',');
+      handleApiError<RegisterSchema>(error, setError, ['email', 'password']);
+      // const apiError = error as {message: string};
+      // if (apiError.message && typeof apiError.message === 'string') {
+      //   const errorArray = apiError.message.split(',');
         
-        errorArray.forEach(error => {
-          if (error.includes('Password')) {
-            setError('password', {message: error});
-          } else if (error.includes('Email')) {
-            setError('email', {message: error});
-          }
-        });
-      }
+      //   errorArray.forEach(error => {
+      //     if (error.includes('Password')) {
+      //       setError('password', {message: error});
+      //     } else if (error.includes('Email')) {
+      //       setError('email', {message: error});
+      //     }
+      //   });
+      // }
     }
   }
 

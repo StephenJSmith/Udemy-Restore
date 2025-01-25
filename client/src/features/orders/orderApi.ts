@@ -3,29 +3,33 @@ import { baseQueryWithErrorHandling } from "../../app/api/baseApi";
 import { CreateOrder, Order } from "../../app/models/order";
 
 export const orderApi = createApi({
-  reducerPath: 'orderApi',
+  reducerPath: "orderApi",
   baseQuery: baseQueryWithErrorHandling,
-  tagTypes: ['Orders'],
+  tagTypes: ["Orders"],
   endpoints: (builder) => ({
     fetchOrders: builder.query<Order[], void>({
       query: () => `orders`,
-      providesTags: ['Orders'],
+      providesTags: ["Orders"],
     }),
     fetchOrderDetails: builder.query<Order, number>({
       query: (id) => `orders/${id}`,
     }),
     createOrder: builder.mutation<Order, CreateOrder>({
-      query: order => ({
+      query: (order) => ({
         url: `orders`,
-        method: 'POST',
+        method: "POST",
         body: order,
       }),
-      onQueryStarted: async (_, {dispatch, queryFulfilled}) => {
+      onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
         await queryFulfilled;
-        dispatch(orderApi.util.invalidateTags(['Orders']))
-      }
+        dispatch(orderApi.util.invalidateTags(["Orders"]));
+      },
     }),
   }),
 });
 
-export const {useFetchOrdersQuery, useFetchOrderDetailsQuery, useCreateOrderMutation} = orderApi; 
+export const {
+  useFetchOrdersQuery,
+  useFetchOrderDetailsQuery,
+  useCreateOrderMutation,
+} = orderApi;
