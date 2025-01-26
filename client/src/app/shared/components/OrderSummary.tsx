@@ -9,10 +9,27 @@ import {
 import { currencyFormat } from "../../../lib/util";
 import { Link, useLocation } from "react-router-dom";
 import { useBasket } from "../../../lib/hooks/useBasket";
+import {
+  useAddCouponMutation,
+  useRemoveCouponMutation,
+} from "../../../features/basket/basketApi";
+import { FieldValues, useForm } from "react-hook-form";
+import { Delete } from "@mui/icons-material";
 
 const OrderSummary = () => {
   const location = useLocation();
-  const {subtotal, deliveryFee} = useBasket();
+  const { subtotal, deliveryFee, discount, basket, total } = useBasket();
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm();
+  const [addCoupon] = useAddCouponMutation();
+  const [removeCoupon, { isLoading }] = useRemoveCouponMutation();
+
+  const onSubmit = async (data: FieldValues) => {
+    await addCoupon(data.code);
+  };
 
   return (
     <Box
@@ -36,10 +53,7 @@ const OrderSummary = () => {
           </Box>
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography color="textSecondary">Discount</Typography>
-            <Typography color="success">
-              {/* TODO */}
-              -$0.00
-            </Typography>
+            <Typography color="success">-{currencyFormat(discount)}</Typography>
           </Box>
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography color="textSecondary">Delivery fee</Typography>
@@ -48,51 +62,76 @@ const OrderSummary = () => {
           <Divider sx={{ my: 2 }} />
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography color="textSecondary">Total</Typography>
-            <Typography>{currencyFormat(subtotal + deliveryFee)}</Typography>
+            <Typography>{currencyFormat(total)}</Typography>
           </Box>
         </Box>
 
         <Box mt={2}>
           {!location.pathname.includes("/checkout") && (
-          <Button 
-          component={Link}
-          to='/checkout'
-          variant="contained" 
-          color="primary" 
-          fullWidth sx={{ mb: 1 }}
-        >
-          Checkout
-        </Button>
-        )}
-          <Button 
-            component={Link}
-            to='/catalog'
-            fullWidth
-          >Continue Shopping</Button>
+            <Button
+              component={Link}
+              to="/checkout"
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ mb: 1 }}
+            >
+              Checkout
+            </Button>
+          )}
+          <Button component={Link} to="/catalog" fullWidth>
+            Continue Shopping
+          </Button>
         </Box>
       </Paper>
 
       {/* Coupon Code Section */}
-      <Paper sx={{ width: "100%", borderRadius: 3, p: 3 }}>
-        <form>
-          <Typography variant="subtitle1" component="label">
-            Do you have a voucher code?
-          </Typography>
+      {location.pathname.includes("checkout") && (
+        <Paper sx={{ width: "100%", borderRadius: 3, p: 3 }}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Typography variant="subtitle1" component="label">
+              Do you have a voucher code?
+            </Typography>
 
-          <TextField
-            label="Voucher code"
-            variant="outlined"
-            fullWidth
-            sx={{ my: 2 }}
-          />
+            {basket?.coupon && (
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography fontWeight="bold" variant="body2">
+                  {basket.coupon.name}
+                </Typography>
+                <Button loading={isLoading} onClick={() => removeCoupon()}>
+                  <Delete color="error" />
+                </Button>
+              </Box>
+            )}
 
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Apply code
-          </Button>
-        </form>
-      </Paper>
+            <TextField
+              label="Voucher code"
+              variant="outlined"
+              fullWidth
+              disabled={!!basket?.coupon}
+              {...register('code', {required: 'Voucher code is missing'})}
+              sx={{ my: 2 }}
+            />
+
+            <Button
+              loading={isSubmitting}
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={!!basket?.coupon}
+            >
+              Apply code
+            </Button>
+          </form>
+        </Paper>
+      )}
     </Box>
   );
-}
+};
 
 export default OrderSummary;

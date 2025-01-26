@@ -9,7 +9,17 @@ export const useBasket = () => {
   const deliveryFee = subtotal > 10000
     ? 0
     : 500;
-  const total = subtotal + deliveryFee;
+  let discount = 0;
 
-    return {basket, subtotal, deliveryFee, total, clearBasket};
+  if (basket?.coupon) {
+    if (basket.coupon.amountOff) {
+      discount = basket.coupon.amountOff;
+    } else if (basket.coupon.percentOff) {
+      discount = Math.round((subtotal * basket.coupon.percentOff) / 100);
+    }
+  }
+
+  const total = Math.round((subtotal - discount + deliveryFee) * 100) / 100;
+
+    return {basket, subtotal, deliveryFee, discount, total, clearBasket};
 }

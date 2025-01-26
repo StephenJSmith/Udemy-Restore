@@ -14,6 +14,7 @@ builder.Services.AddDbContext<StoreContext>(options =>
 builder.Services.AddCors();
 builder.Services.AddTransient<ExceptionMiddleware>();
 builder.Services.AddScoped<PaymentsService>();
+builder.Services.AddScoped<DiscountService>();
 builder.Services.AddIdentityApiEndpoints<User>(opt =>
 {
   opt.User.RequireUniqueEmail = true;
